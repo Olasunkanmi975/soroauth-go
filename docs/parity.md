@@ -28,6 +28,31 @@ no suite ever writes to the vectors — a disagreement means an implementation i
 wrong, and editing a vector to make a harness pass destroys the evidence (see
 [CONTRIBUTING.md](../CONTRIBUTING.md#golden-vectors)).
 
+## Structural boundaries, and where the implementations disagree
+
+The vectors include the structural limits a host enforces, not only the shapes
+someone happened to write down (#366): `v2_account_multisig_20_signatures` is
+exactly the host's `MAX_ACCOUNT_SIGNATURES = 20` account signatures,
+`v2_empty_args` is an empty argument list, `delegates_single_node` is the
+shallowest tree, and `delegates_chain_depth_57` is the deepest delegate nesting
+the library accepts end to end.
+
+The depth vector records a real disagreement between the two implementations
+rather than a shared limit:
+
+- The pinned `@stellar/stellar-sdk` imposes **no policy cap** on delegate
+  nesting. Its only bound is the XDR codec's internal recursion guard (1500
+  frames), and it will build — and sign — chains of several hundred delegates.
+- `DecodeAuthorizationEntry` applies the library's 64-frame XDR bound, and each
+  delegate costs roughly two frames, so it refuses a chain of 58 and accepts 57.
+- `WithDelegates` applies the `MaxDecodeDepth = 64` traversal bound, which
+  accepts a chain of 63 (its guard also visits the empty level below a leaf).
+
+The intersection is 57, which is the vector's recorded depth. The finding is
+that a client which trusts the JS SDK to decide "this tree is fine" can build an
+entry the Go library then refuses to decode; anything near that boundary should
+be validated against the intended library before it is signed.
+
 ## What none of them rule out
 
 - **A bug every offline implementation shares.** Each new implementation narrows
