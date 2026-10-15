@@ -8,6 +8,15 @@ this project adheres to
 
 ## [Unreleased]
 
+- The signing-path benchmark gate is split per operation and per credential arm.
+  `bench_arms_test.go` adds `BenchmarkVerifyEntry` and `BenchmarkDiffEntries` on
+  legacy, V2 and delegates, plus `BenchmarkDelegateTree` parameterised by node
+  count, so a regression in one arm cannot hide behind an improvement in
+  another. `scripts/checkbench` now reports a failure by the operation and arm
+  it gates (`verification/delegates`) with the measured value and the committed
+  baseline, and `testdata/bench/budgets.json` carries a separate baseline per
+  arm. (#365)
+
 - The documentation directory has an index: [`docs/README.md`](docs/README.md)
   lists every document in the repository with one line on the question it
   answers, and the README links to it. (#173)
