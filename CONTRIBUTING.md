@@ -272,6 +272,17 @@ delegates, including a depth-8 delegate chain), `AuthorizeAll` over a 12-entry,
 that every entry-returning function performs, in its two on-path shapes (an
 authorization entry and a `HashIdPreimage`).
 
+Issue #365 split the gate into a **separate budget per operation and per
+credential arm**, so a regression in one arm cannot hide behind an improvement
+in another. `bench_arms_test.go` adds `BenchmarkVerifyEntry` and
+`BenchmarkDiffEntries` on each of the three arms, plus `BenchmarkDelegateTree`,
+which signs a delegate chain parameterised by node count (`nodes_1`, `nodes_4`,
+`nodes_16`, `nodes_63`) so super-linear growth in the recursive walk is visible.
+Each budget in `testdata/bench/budgets.json` may name the operation and arm it
+gates; `checkbench` prints that label on failure (`verification/delegates`)
+instead of an opaque Go benchmark path, and always prints the underlying
+benchmark name too.
+
 ```sh
 # Full suite with allocation stats
 go test -run '^$' -bench . -benchmem -count=1 .
@@ -309,16 +320,18 @@ a renamed benchmark cannot silently drop out of the gate.
 
 ### Reproducing a budget failure locally
 
-A CI failure from the `bench` job is a `FAIL` line naming the benchmark and the
-budget it exceeded:
+A CI failure from the `bench` job is a `FAIL` line naming the operation and arm,
+the measured value, and the committed baseline, with the benchmark path on the
+following line:
 
 ```
-FAIL BenchmarkXDRCopy/entry   allocs/op 26 > budget 23; B/op 1632 > budget 1250
+FAIL verification/delegates        allocs/op 49 > baseline 10
+                                   benchmark BenchmarkVerifyEntry/delegates  (143581 ns/op)
 ```
 
 The two commands above, run from the repository root, reproduce it locally —
-`checkbench` exits 1 exactly as CI does. Once you can see _which_ benchmark
-regressed, find out _where_ the allocations come from:
+`checkbench` exits 1 exactly as CI does. Once you can see _which_ operation and
+arm regressed, find out _where_ the allocations come from:
 
 ```sh
 go test -run '^$' -bench BenchmarkXDRCopy -benchmem -count=1 -memprofile /tmp/mem.out .
