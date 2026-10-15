@@ -58,7 +58,7 @@ help:
 	@echo "  make parity-rust   run the Rust stellar-xdr parity harness"
 	@echo "  make differential  regenerate the differential corpus and check it with JS and Python"
 	@echo "  make wasm          build the js/wasm signing core into wasm/dist/"
-	@echo "  make wasm-check    build the wasm core and prove it matches the golden vectors"
+	@echo "  make wasm-check    build the wasm core and prove it matches the golden, differential and fuzz corpora"
 	@echo "  make wasm-budget   build the wasm core and fail if it is over its size ceiling"
 	@echo "  make ts-test       typecheck and test the TypeScript wrapper package"
 	@echo "  make clean         remove $(BIN_DIR)/ and build output"
@@ -120,7 +120,9 @@ man: build
 
 # Golden vectors are generated, committed artefacts. Regenerating them is safe;
 # `vectors-check` is the one that proves the committed files match, which is
-# what CI runs.
+# what CI runs. It also diffs testdata/frozen, the hand-committed cross-version
+# set, so a `make vectors` that somehow wrote there fails the check instead of
+# silently rewriting evidence that must not move.
 #
 # Two generators, two reference implementations: gen.mjs writes the
 # authorization-entry vectors against @stellar/stellar-sdk, and gen-passkey.mjs
@@ -130,11 +132,13 @@ vectors:
 	cd testdata/gen && $(NPM) ci && $(NODE) gen.mjs && $(NODE) gen-passkey.mjs
 
 vectors-check: vectors
-	@if ! git diff --exit-code -- testdata/vectors; then \
+	@if ! git diff --exit-code -- testdata/vectors testdata/frozen; then \
 		echo; \
-		echo "The committed golden vectors differ from freshly generated ones."; \
+		echo "The committed golden vectors differ from freshly generated ones, or"; \
+		echo "regeneration touched the frozen cross-version set under testdata/frozen."; \
 		echo "Never edit a vector by hand. Commit the regenerated files with the"; \
-		echo "generator change, or investigate why the reference output moved."; \
+		echo "generator change, or investigate why the reference output moved. The"; \
+		echo "frozen set is never regenerated; see testdata/frozen/README.md."; \
 		exit 1; \
 	fi
 
@@ -225,8 +229,9 @@ diagrams-check:
 wasm:
 	./wasm/build.sh
 
-# Builds the module and then replays every golden vector through it, asserting
-# byte-identical output.
+# Builds the module and then replays the golden vectors, the differential corpus
+# (and its frozen regressions) and the fuzz seed corpus through it, asserting
+# byte-identical output against the native build.
 wasm-check: wasm
 	$(NODE) wasm/parity.mjs
 
