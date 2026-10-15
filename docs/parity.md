@@ -84,6 +84,12 @@ wasm build decodes and hashes them identically, and does not prove `Inspect` or
 the delegate-order check behave the same under wasm, because neither is part of
 the wasm surface.
 
+For the same reason the golden vector signed by a classic-account multisig
+(`v2_account_multisig_20_signatures`) is reported as skipped: the binding's
+signing entry point takes one seed, so it cannot assemble a multi-signature
+entry. Its preimage and payload are still checked byte for byte; only the final
+signed entry is not compared, and the skip names that reason.
+
 A case the native build refused is not skipped: the harness requires the wasm
 build to refuse it too, so a decode that starts succeeding in wasm under its
 integer and memory model fails the run. This is where the int64 nonce boundaries

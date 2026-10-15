@@ -263,6 +263,20 @@ function vectorsMatch(api, vector) {
     return { status: "mismatch", detail: "payload(preimage) differs from recorded payload" };
   }
 
+  // A classic-account multisig step assembles several signatures over the same
+  // payload. The wasm binding signs with a single seed (authorizeWithSeed), so
+  // it cannot build that entry; the preimage, payload and standalone-payload
+  // checks above still ran. Report it as a skip with the reason rather than
+  // silently comparing a single-signer entry and calling it a match.
+  if (vector.steps.some((step) => step.multisig)) {
+    return {
+      status: "skip",
+      detail:
+        "multisig signed entry: the wasm binding exposes single-seed signing " +
+        "only (preimage and payload matched)",
+    };
+  }
+
   // Replay every signing step, exactly as golden_test.go does.
   let current = vector.unsigned_entry_xdr;
   for (const step of vector.steps) {
