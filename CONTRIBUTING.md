@@ -36,9 +36,12 @@ the section that explains it.
 - [ ] **8. Commit in conventional form**, lowercase and imperative, one logical
       unit per commit, with the command you ran and its real output in the body
       — see [Commit format](#commit-format).
-- [ ] **9. Open the pull request** with `Closes #<n>`, what you changed, and how
-      you verified it. Two checks gate the merge: `vet and test` and
-      `golden vectors are reproducible`.
+- [ ] **9. Open the pull request** with one `Closes #<n>` line per issue it
+      resolves, what you changed, and how you verified it. A space-separated
+      list (`Closes #1 #2`) links only the first issue, and a closing line added
+      after the pull request is merged closes nothing, so write them before the
+      merge — otherwise an issue the work delivered stays open. Two checks gate
+      the merge: `vet and test` and `golden vectors are reproducible`.
 - [ ] **10. If the work turned out larger than its complexity label**, say so on
       the issue rather than absorbing it silently.
 
