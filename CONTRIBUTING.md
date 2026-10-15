@@ -238,7 +238,10 @@ by recomputing the vectors with other implementations:
   keeps being checked. **A divergence is a release blocker.**
 - **WebAssembly** (`wasm/parity.mjs`), against the wasm build of this same
   library. `make wasm-check` proves the browser build emits the same bytes as
-  the native one.
+  the native one, replaying the golden vectors, the differential corpus and its
+  frozen regressions, and the fuzz seed corpus against the native results
+  recorded in `testdata/wasm-parity/fuzz_expectations.json`. A seed the native
+  build refused must be refused by the wasm build too.
 
 The golden-vector harnesses are pinned: the Python SDK in `requirements.txt`,
 the JS SDK in `testdata/gen/package.json`, the differential verifier's JS SDK in

@@ -8,6 +8,16 @@ this project adheres to
 
 ## [Unreleased]
 
+- The wasm build is checked against the generated corpora, not only the golden
+  vectors. `wasm/parity.mjs` now replays the differential fuzzing corpus and its
+  frozen regressions, and the fuzz seed corpus, through
+  `wasm/dist/soroauth.wasm` and asserts byte equality against the native build.
+  The fuzz seeds' native results are recorded in
+  `testdata/wasm-parity/fuzz_expectations.json` by `cmd/gencorpus`, so they are
+  drift-checked with the seeds they describe; a seed the native build refused
+  must be refused by the wasm build too. The harness reports the case counts and
+  its elapsed time against a 60-second budget. (#364)
+
 - The documentation directory has an index: [`docs/README.md`](docs/README.md)
   lists every document in the repository with one line on the question it
   answers, and the README links to it. (#173)

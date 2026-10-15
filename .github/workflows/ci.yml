@@ -53,14 +53,16 @@ jobs:
       # step of this job rather than a job of its own, because pull requests are
       # capped at three checks. The seeds themselves are exercised by the
       # `go test` below: Go runs every file in
-      # testdata/fuzz/FuzzValidateDelegateOrder as a normal subtest.
+      # testdata/fuzz/FuzzValidateDelegateOrder as a normal subtest. The same
+      # run writes the native expectations wasm/parity.mjs replays the wasm
+      # build against, so those are covered by the same diff.
       - name: fuzz seed corpus is reproducible
         run: |
           go run ./cmd/gencorpus
-          if ! git diff --exit-code testdata/fuzz; then
+          if ! git diff --exit-code testdata/fuzz testdata/wasm-parity; then
             echo
-            echo "The committed fuzz seed corpus differs from freshly generated seeds."
-            echo "Regenerate it with:"
+            echo "The committed fuzz seed corpus or wasm parity expectations differ from freshly generated ones."
+            echo "Regenerate them with:"
             echo "  go run ./cmd/gencorpus"
             echo "and commit the result."
             exit 1

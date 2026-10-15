@@ -58,7 +58,7 @@ help:
 	@echo "  make parity-rust   run the Rust stellar-xdr parity harness"
 	@echo "  make differential  regenerate the differential corpus and check it with JS and Python"
 	@echo "  make wasm          build the js/wasm signing core into wasm/dist/"
-	@echo "  make wasm-check    build the wasm core and prove it matches the golden vectors"
+	@echo "  make wasm-check    build the wasm core and prove it matches the golden, differential and fuzz corpora"
 	@echo "  make wasm-budget   build the wasm core and fail if it is over its size ceiling"
 	@echo "  make ts-test       typecheck and test the TypeScript wrapper package"
 	@echo "  make clean         remove $(BIN_DIR)/ and build output"
@@ -225,8 +225,9 @@ diagrams-check:
 wasm:
 	./wasm/build.sh
 
-# Builds the module and then replays every golden vector through it, asserting
-# byte-identical output.
+# Builds the module and then replays the golden vectors, the differential corpus
+# (and its frozen regressions) and the fuzz seed corpus through it, asserting
+# byte-identical output against the native build.
 wasm-check: wasm
 	$(NODE) wasm/parity.mjs
 
