@@ -120,7 +120,9 @@ man: build
 
 # Golden vectors are generated, committed artefacts. Regenerating them is safe;
 # `vectors-check` is the one that proves the committed files match, which is
-# what CI runs.
+# what CI runs. It also diffs testdata/frozen, the hand-committed cross-version
+# set, so a `make vectors` that somehow wrote there fails the check instead of
+# silently rewriting evidence that must not move.
 #
 # Two generators, two reference implementations: gen.mjs writes the
 # authorization-entry vectors against @stellar/stellar-sdk, and gen-passkey.mjs
@@ -130,11 +132,13 @@ vectors:
 	cd testdata/gen && $(NPM) ci && $(NODE) gen.mjs && $(NODE) gen-passkey.mjs
 
 vectors-check: vectors
-	@if ! git diff --exit-code -- testdata/vectors; then \
+	@if ! git diff --exit-code -- testdata/vectors testdata/frozen; then \
 		echo; \
-		echo "The committed golden vectors differ from freshly generated ones."; \
+		echo "The committed golden vectors differ from freshly generated ones, or"; \
+		echo "regeneration touched the frozen cross-version set under testdata/frozen."; \
 		echo "Never edit a vector by hand. Commit the regenerated files with the"; \
-		echo "generator change, or investigate why the reference output moved."; \
+		echo "generator change, or investigate why the reference output moved. The"; \
+		echo "frozen set is never regenerated; see testdata/frozen/README.md."; \
 		exit 1; \
 	fi
 
