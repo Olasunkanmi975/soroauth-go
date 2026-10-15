@@ -8,6 +8,15 @@ this project adheres to
 
 ## [Unreleased]
 
+- Entries signed by the `v0.1.0` release are frozen under
+  `testdata/frozen/v0.1.0/` and checked against the current code: each must
+  still decode to the same bytes, rebuild the payload the release recorded,
+  verify, and inspect to the same structure. The set is produced by
+  `scripts/frozengen` running inside the release's checkout, is never
+  regenerated, and lives outside `testdata/vectors` so `make vectors` cannot
+  move it; `make vectors-check` and CI diff it too. A frozen entry that stops
+  verifying is a wire-format regression and fails the build. (#360)
+
 - The documentation directory has an index: [`docs/README.md`](docs/README.md)
   lists every document in the repository with one line on the question it
   answers, and the README links to it. (#173)

@@ -504,6 +504,26 @@ pinned to, since a vector from another build is not evidence about this one.
 complete output, so the one-element vector `smart-account-kit` wraps its map in
 is pinned rather than assumed.
 
+### Frozen release entries
+
+The golden vectors move with the code: `make vectors` regenerates them in the
+same commit as any change. That is what they are for, and it is also why they
+cannot catch a wire-format regression in reading a stored, pre-signed entry —
+the vector and the reader change together.
+
+`testdata/frozen/<release>/` is the opposite: entries signed by an earlier
+release, committed once and **never regenerated**. `frozen_test.go` asserts the
+current code still decodes each to the same bytes, rebuilds the payload the
+release recorded, verifies the signature and inspects to the same structure. If
+one ever stops verifying, that is a wire-format regression and must stop the
+build, not be re-recorded.
+
+The set is kept out of `testdata/vectors/`, and `make vectors-check` (and CI)
+diffs it as well, so a generator that wrote there would fail the check. To add a
+set for a new release, follow
+[`testdata/frozen/README.md`](testdata/frozen/README.md) — check out the tag,
+run `scripts/frozengen` inside that worktree, and commit the output.
+
 ## Deterministic test keys
 
 Every key in the tests, examples, benchmarks and golden vectors is derived from
